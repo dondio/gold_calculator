@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>محاسبه‌گر خرید طلا (PWA)</title>
+  <meta name="theme-color" content="#0d6efd">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <style>
+    :root{--bg:#f6f8ff;--card:#fff;--accent:#0d6efd;--muted:#6c757d}
+    *{box-sizing:border-box}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; margin:0; padding:1rem; background:var(--bg); color:#111; line-height:1.45}
+    header{background:var(--accent); color:white; padding:1rem; border-radius:10px}
+    h1{margin:0;font-size:1.25rem}
+    .container{max-width:760px;margin:1rem auto}
+    .card{background:var(--card);padding:1rem;border-radius:10px;box-shadow:0 8px 24px rgba(13,110,253,0.06);margin-bottom:1rem}
+    label{display:block;margin-bottom:.4rem;font-weight:600}
+    input[type="number"], input[type="text"], select{width:100%;padding:.6rem;border:1px solid #e6e9f2;border-radius:8px;margin-bottom:.8rem;font-size:1rem}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+    .btn{display:inline-block;background:var(--accent);color:white;padding:.6rem .9rem;border-radius:8px;border:none;cursor:pointer;font-weight:700}
+    .small{font-size:.9rem;color:var(--muted)}
+    table{width:100%;border-collapse:collapse;margin-top:.6rem}
+    td,th{padding:.5rem;border-bottom:1px solid #f1f3fb;text-align:right}
+    .result-amount{font-weight:800;color:#0b5ed7}
+    footer{font-size:.85rem;color:var(--muted);text-align:center;margin-top:1rem}
+    .note{background:#fff7e6;padding:.6rem;border-radius:8px;border:1px solid #fff0d6;margin-bottom:.8rem}
+    @media(max-width:600px){.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>محاسبه‌گر خرید طلا — PWA</h1>
+    <div class="small">قابل نصب روی موبایل — دقت کن اعداد به تومان وارد شوند.</div>
+  </header>
+
+  <div class="container">
+    <section class="card" aria-labelledby="calc-title">
+      <h2 id="calc-title">ورود اطلاعات</h2>
+      <div class="note small">برای طلای دست‌دوم اجرت صفر است؛ فقط سود فروشنده و مالیات روی سود محاسبه می‌شود.</div>
+      <label for="weight">وزن (گرم)</label>
+      <input id="weight" type="number" min="0" step="0.01" value="5">
+
+      <label for="pricePerGram">قیمت هر گرم ۱۸ عیار (تومان)</label>
+      <input id="pricePerGram" type="number" min="0" step="1" value="9129400">
+
+      <label for="type">نوع خرید</label>
+      <select id="type">
+        <option value="new">نو (با اجرت ساخت)</option>
+        <option value="used">دست‌دوم (بدون اجرت)</option>
+      </select>
+
+      <div class="row">
+        <div>
+          <label for="laborPerGram">اجرت ساخت (دستمزد) — تومان/گرم</label>
+          <input id="laborPerGram" type="number" min="0" step="1" value="200000">
+        </div>
+        <div>
+          <label for="shopProfitPercent">سود فروشنده (%)</label>
+          <input id="shopProfitPercent" type="number" min="0" step="0.1" value="7">
+        </div>
+      </div>
+
+      <label for="taxPercent">مالیات بر ارزش افزوده (%) — محاسبه روی (اجرت+سود)</label>
+      <input id="taxPercent" type="number" min="0" step="0.1" value="10">
+
+      <div style="display:flex;gap:.6rem;align-items:center;margin-top:.6rem">
+        <button id="calcBtn" class="btn">محاسبه کن</button>
+        <button id="resetBtn" class="btn" style="background:#6c757d">ریست</button>
+      </div>
+    </section>
+
+    <section class="card" id="resultCard" aria-live="polite" style="display:none">
+      <h2>خلاصه محاسبه</h2>
+      <table>
+        <tr><td>قیمت طلای خام (وزن × قیمت هر گرم)</td><td id="rawPrice">—</td></tr>
+        <tr><td>اجرت ساخت (تومان)</td><td id="laborTotal">—</td></tr>
+        <tr><td>سود فروشنده</td><td id="profitAmount">—</td></tr>
+        <tr><td>پایه مالیات (سود + اجرت)</td><td id="taxBase">—</td></tr>
+        <tr><td>مالیات (نرخ)</td><td id="taxAmount">—</td></tr>
+        <tr><th>قیمت نهایی قابل پرداخت</th><th id="finalPrice" class="result-amount">—</th></tr>
+      </table>
+      <div class="small" style="margin-top:.6rem">اگر نوع خرید <strong>دست‌دوم</strong> انتخاب شده باشد، اجرت صفر فرض می‌شود.</div>
+    </section>
+
+    <section class="card small">
+      <h3>نکات و اعتبارسنجی</h3>
+      <ul>
+        <li>مطمئن شو ترازو معتبر باشه و عیار روی قطعه حک شده باشه.</li>
+        <li>در طلای دست‌دوم نباید اجرت ساخت حساب بشه — اگر فروشنده گفت اجرت دارد، دلیل بخواه.</li>
+        <li>سود فروشنده را می‌توان به‌صورت درصد یا یک مبلغ ثابت در نظر گرفت؛ در اپ فعلی درصد اعمال می‌شود.</li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>نسخه آزمایشی — هر سوالی داشتی بگو تا قابلیت اضافه کنم.</footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>
